@@ -21,7 +21,8 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Wave 5
-  m_Shader: {fileID: -6465566751694194690, guid: 07194d654e8941d468077e1a0cd785fc, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 07194d654e8941d468077e1a0cd785fc,
+    type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -71,7 +72,7 @@ Material:
     - _EnableExternalAlpha: 0
     - _WindInfluenceMask: 36.24
     - _WindScale: 0.5
-    - _WindSpeed: 2.41
+    - _WindSpeed: 0
     - _WindStreght: 0.07
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
