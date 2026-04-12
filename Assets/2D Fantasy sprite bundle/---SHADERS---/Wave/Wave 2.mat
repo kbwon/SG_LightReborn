@@ -8,12 +8,12 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Wave 2
-  m_Shader: {fileID: -6465566751694194690, guid: 07194d654e8941d468077e1a0cd785fc, type: 3}
+  m_Shader: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords:
+  m_ValidKeywords:
   - ETC1_EXTERNAL_ALPHA
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -56,6 +56,7 @@ Material:
     m_Floats:
     - Boolean_B9EB5E16: 0
     - Boolean_D0645B73: 0
+    - PixelSnap: 0
     - _EnableExternalAlpha: 0
     - _WindInfluenceMask: 3.4
     - _WindScale: 0.2
