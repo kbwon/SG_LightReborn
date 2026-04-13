@@ -256,6 +256,12 @@ public class FlowManager : MonoBehaviour
             group.ResetFade();
         }
 
+        DeerEndController[] deerEndControllers = FindObjectsOfType<DeerEndController>(true);
+        foreach (DeerEndController controller in deerEndControllers)
+        {
+            controller.ResetSequence();
+        }
+
         Debug.Log("[FlowManager] ResetAll completed");
     }
 
@@ -305,5 +311,15 @@ public class FlowManager : MonoBehaviour
                 initialObjectStates.Add(obj, obj.activeSelf);
             }
         }
+    }
+
+    public void CompleteEnding()
+    {
+        endingCompleted = true;
+        currentStage = FlowStage.Finished;
+
+        ApplyObjectGroup(showOnFinished, hideOnFinished);
+
+        Debug.Log("[FlowManager] Ending completed -> Stage: Finished");
     }
 }
