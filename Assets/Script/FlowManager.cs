@@ -239,6 +239,23 @@ public class FlowManager : MonoBehaviour
         SetTargetsInteractable(unlockOnWolfCleared, false);
         SetTargetsInteractable(unlockOnTreeCleared, false);
 
+        ProjectionActorSequence[] sequences = FindObjectsOfType<ProjectionActorSequence>(true);
+        foreach (ProjectionActorSequence sequence in sequences)
+        {
+            sequence.ResetSequence();
+        }
+
+        SmallAnimalRunSequence[] sequences_s = FindObjectsOfType<SmallAnimalRunSequence>(true);
+        foreach (SmallAnimalRunSequence sequence in sequences_s)
+        {
+            sequence.ResetSequence();
+        }
+        SpriteCrossFadeGroup[] fadeGroups = FindObjectsOfType<SpriteCrossFadeGroup>(true);
+        foreach (SpriteCrossFadeGroup group in fadeGroups)
+        {
+            group.ResetFade();
+        }
+
         Debug.Log("[FlowManager] ResetAll completed");
     }
 
