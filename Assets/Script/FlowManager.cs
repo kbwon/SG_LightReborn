@@ -64,6 +64,8 @@ public class FlowManager : MonoBehaviour
 
     private readonly Dictionary<GameObject, bool> initialObjectStates = new Dictionary<GameObject, bool>();
 
+    [SerializeField] private PlayerLamp playerLampVisual;
+
     public FlowStage CurrentStage => currentStage;
     public float LampPower => lampPower;
     public int RestoredSmallAnimals => restoredSmallAnimals;
@@ -193,6 +195,11 @@ public class FlowManager : MonoBehaviour
     {
         lampPower += amount;
         Debug.Log($"[FlowManager] LampPower changed: {lampPower}");
+
+        if (playerLampVisual != null)
+        {
+            playerLampVisual.IncreaseLight(amount);
+        }
     }
 
     public void SetLampPower(float value)
@@ -322,4 +329,6 @@ public class FlowManager : MonoBehaviour
 
         Debug.Log("[FlowManager] Ending completed -> Stage: Finished");
     }
+
+
 }

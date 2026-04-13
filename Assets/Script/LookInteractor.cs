@@ -5,7 +5,7 @@ public class LookInteractor : MonoBehaviour
     [Header("References")]
     [SerializeField] private Camera targetCamera;
     [SerializeField] private FlowManager flowManager;
-    [SerializeField] private SimpleFirstPersonTestPlayer player;
+    [SerializeField] private PlayerInteractionBridge player;
 
     [Header("Cast")]
     [SerializeField] private float maxDistance = 10f;
@@ -49,7 +49,7 @@ public class LookInteractor : MonoBehaviour
 
         if (player == null)
         {
-            player = GetComponent<SimpleFirstPersonTestPlayer>();
+            player = GetComponent<PlayerInteractionBridge>();
         }
     }
 

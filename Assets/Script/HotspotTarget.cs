@@ -63,7 +63,7 @@ public class HotspotTarget : MonoBehaviour
         CacheInitialStates(showOnActivate, hideOnActivate);
     }
 
-    public bool CanInteract(FlowManager flowManager, SimpleFirstPersonTestPlayer player)
+    public bool CanInteract(FlowManager flowManager, PlayerInteractionBridge player)
     {
         if (!interactable) return false;
         if (oneShot && activated) return false;
@@ -85,7 +85,7 @@ public class HotspotTarget : MonoBehaviour
         return true;
     }
 
-    public float TickHold(float deltaTime, bool isUsingLamp, FlowManager flowManager, SimpleFirstPersonTestPlayer player)
+    public float TickHold(float deltaTime, bool isUsingLamp, FlowManager flowManager, PlayerInteractionBridge player)
     {
         if (!CanInteract(flowManager, player))
         {
