@@ -492,12 +492,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lampLight: {fileID: 805651633}
+  lampGlowRenderer: {fileID: 0}
+  lampLightColor: {r: 1, g: 0.58, b: 0.22, a: 1}
   baseLightIntensity: 1
   maxLightIntensity: 4
   intensityChangeSpeed: 2
+  baseLightRange: 0.35
+  maxLightRange: 5
+  rangeChangeSpeed: 4
+  baseGlowEmission: 0.05
+  maxGlowEmission: 3
+  glowChangeSpeed: 3
   lightBoostObjectTag: object
   lightIncreaseAmount: 0.5
+  rangeIncreaseAmount: 1.5
+  glowIncreaseAmount: 0.75
   lightChangeLogInterval: 0.25
+  useDramaticLightBoostDefaults: 1
 --- !u!1001 &791236942
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1492,12 +1503,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lampLight: {fileID: 805651633}
+  lampGlowRenderer: {fileID: 0}
+  lampLightColor: {r: 1, g: 0.58, b: 0.22, a: 1}
   baseLightIntensity: 1
   maxLightIntensity: 4
   intensityChangeSpeed: 2
+  baseLightRange: 0.35
+  maxLightRange: 5
+  rangeChangeSpeed: 4
+  baseGlowEmission: 0.05
+  maxGlowEmission: 3
+  glowChangeSpeed: 3
   lightBoostObjectTag: object
   lightIncreaseAmount: 0.5
+  rangeIncreaseAmount: 1.5
+  glowIncreaseAmount: 0.75
   lightChangeLogInterval: 0.25
+  useDramaticLightBoostDefaults: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
