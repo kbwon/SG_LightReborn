@@ -10,5 +10,9 @@ public class SceneStartSetup : MonoBehaviour
         {
             flowManager.NotifyLampTaken();
         }
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayDarkRuinBGM();
+        }
     }
 }
