@@ -1659,6 +1659,8 @@ MonoBehaviour:
   missColor: {r: 1, g: 0, b: 0, a: 1}
   currentTarget: {fileID: 0}
   currentProgress: 0
+  autoInteractWhenClose: 1
+  requireLampEquipped: 1
 --- !u!1 &412844681
 GameObject:
   m_ObjectHideFlags: 0
@@ -3910,7 +3912,7 @@ MonoBehaviour:
   - {fileID: 335533101}
   - {fileID: 875485871}
   - {fileID: 111026574}
-  fadeDuration: 1
+  fadeDuration: 2
   setFadeInAlphaToZeroOnAwake: 1
   setFadeOutAlphaToOneOnAwake: 1
 --- !u!1 &912647527
@@ -4194,6 +4196,8 @@ MonoBehaviour:
   missColor: {r: 1, g: 0, b: 0, a: 1}
   currentTarget: {fileID: 0}
   currentProgress: 0
+  autoInteractWhenClose: 1
+  requireLampEquipped: 1
 --- !u!1 &968450943
 GameObject:
   m_ObjectHideFlags: 0

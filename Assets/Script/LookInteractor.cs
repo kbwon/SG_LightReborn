@@ -32,6 +32,10 @@ public class LookInteractor : MonoBehaviour
     [SerializeField] private HotspotTarget currentTarget;
     [SerializeField] private float currentProgress = 0f;
 
+    [Header("Auto Interaction")]
+    [SerializeField] private bool autoInteractWhenClose = true;
+    [SerializeField] private bool requireLampEquipped = true;
+
     public HotspotTarget CurrentTarget => currentTarget;
     public float CurrentProgress => currentProgress;
 
@@ -130,7 +134,17 @@ public class LookInteractor : MonoBehaviour
             return;
         }
 
-        bool usingLamp = (player != null && player.IsUsingLamp);
+        bool usingLamp = false;
+
+        if (autoInteractWhenClose)
+        {
+            bool hasLamp = (player == null) || !requireLampEquipped || player.HasLamp;
+            usingLamp = extraChecksPassed && hasLamp;
+        }
+        else
+        {
+            usingLamp = (player != null && player.IsUsingLamp);
+        }
 
         currentProgress = currentTarget.TickHold(
             Time.deltaTime,
