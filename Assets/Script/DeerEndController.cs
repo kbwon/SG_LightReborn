@@ -23,6 +23,11 @@ public class DeerEndController : MonoBehaviour
     [SerializeField] private float transformTotalDuration = 1.8f;
     [SerializeField] private float finalFadeDuration = 0.8f;
 
+    [SerializeField] private GameObject endingMessageObject;
+    [SerializeField] private float endingMessageDelay = 0.2f;
+    [SerializeField] private GameObject[] objectsToHideAtEndingEnd;
+
+
     private bool returnStarted = false;
     private bool finalSequenceStarted = false;
 
@@ -144,6 +149,23 @@ public class DeerEndController : MonoBehaviour
             }
 
             yield return null;
+        }
+
+        if (objectsToHideAtEndingEnd != null)
+        {
+            foreach (GameObject obj in objectsToHideAtEndingEnd)
+            {
+                if (obj != null)
+                {
+                    obj.SetActive(false);
+                }
+            }
+        }
+
+        if (endingMessageObject != null)
+        {
+            yield return new WaitForSeconds(endingMessageDelay);
+            endingMessageObject.SetActive(true);
         }
     }
 
