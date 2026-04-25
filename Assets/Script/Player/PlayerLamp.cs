@@ -2,30 +2,48 @@
 
 public class PlayerLamp : MonoBehaviour
 {
+    [Header("References")]
     [SerializeField] private Light lampLight;
     [SerializeField] private Renderer lampGlowRenderer;
-    [SerializeField] private Color lampLightColor = new Color(1f, 0.58f, 0.22f);
-    [SerializeField] private float baseLightIntensity = 1f;
-    [SerializeField] private float maxLightIntensity = 4f;
-    [SerializeField] private float intensityChangeSpeed = 2f;
-    [SerializeField] private float baseLightRange = 0.35f;
-    [SerializeField] private float maxLightRange = 5f;
-    [SerializeField] private float rangeChangeSpeed = 4f;
-    [SerializeField] private float baseGlowEmission = 0.05f;
-    [SerializeField] private float maxGlowEmission = 3f;
-    [SerializeField] private float glowChangeSpeed = 3f;
-    [SerializeField] private string lightBoostObjectTag = "object";
-    [SerializeField] private float lightIncreaseAmount = 0.5f;
-    [SerializeField] private float rangeIncreaseAmount = 1.5f;
-    [SerializeField] private float glowIncreaseAmount = 0.75f;
-    [SerializeField] private float lightChangeLogInterval = 0.25f;
-    [SerializeField] private bool useDramaticLightBoostDefaults = true;
 
+    [Header("Light Color")]
+    [SerializeField] private Color lampLightColor = new Color(1f, 0.58f, 0.22f);
+
+    [Header("Base / Max")]
+    [SerializeField] private float baseLightIntensity = 0.22f;
+    [SerializeField] private float maxLightIntensity = 4.2f;
+    [SerializeField] private float intensityChangeSpeed = 3f;
+
+    [SerializeField] private float baseLightRange = 1.25f;
+    [SerializeField] private float maxLightRange = 5.2f;
+    [SerializeField] private float rangeChangeSpeed = 2.4f;
+
+    [SerializeField] private float baseGlowEmission = 0.15f;
+    [SerializeField] private float maxGlowEmission = 2.8f;
+    [SerializeField] private float glowChangeSpeed = 3f;
+
+    [Header("Progress Curves")]
+    [SerializeField] private AnimationCurve intensityByProgress = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+    [SerializeField] private AnimationCurve rangeByProgress = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+    [SerializeField] private AnimationCurve glowByProgress = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
+    [Header("Optional Physical Boost")]
+    [SerializeField] private bool allowPhysicalBoostFromTags = false;
+    [SerializeField] private string lightBoostObjectTag = "object";
+    [SerializeField] private float fallbackAmountForFullCharge = 12f;
+
+    [Header("Legacy / Debug")]
+    [SerializeField] private float lightChangeLogInterval = 0.25f;
+    [SerializeField] private bool useDramaticLightBoostDefaults = false;
+
+    private float visualProgress01;
     private float targetLightIntensity;
     private float targetLightRange;
     private float currentGlowEmission;
     private float targetGlowEmission;
     private float nextLightChangeLogTime;
+
+    public float VisualProgress01 => visualProgress01;
 
     private void Awake()
     {
@@ -36,36 +54,28 @@ public class PlayerLamp : MonoBehaviour
 
         if (useDramaticLightBoostDefaults)
         {
-            baseLightIntensity = 0.05f;
-            maxLightIntensity = 6f;
-            intensityChangeSpeed = 2.5f;
-            baseLightRange = 0.2f;
-            maxLightRange = 3.5f;
-            rangeChangeSpeed = 1.2f;
-            baseGlowEmission = 0.03f;
-            maxGlowEmission = 2.5f;
-            glowChangeSpeed = 1.5f;
-            lightIncreaseAmount = 0.75f;
-            rangeIncreaseAmount = 0.45f;
-            glowIncreaseAmount = 0.3f;
-        }
+            baseLightIntensity = 0.08f;
+            maxLightIntensity = 3.8f;
+            intensityChangeSpeed = 2.6f;
 
-        targetLightIntensity = baseLightIntensity;
-        targetLightRange = baseLightRange;
-        currentGlowEmission = baseGlowEmission;
-        targetGlowEmission = baseGlowEmission;
+            baseLightRange = 1.0f;
+            maxLightRange = 4.2f;
+            rangeChangeSpeed = 2.0f;
+
+            baseGlowEmission = 0.08f;
+            maxGlowEmission = 2.2f;
+            glowChangeSpeed = 2.4f;
+        }
 
         if (lampLight != null)
         {
             lampLight.type = LightType.Point;
             lampLight.color = lampLightColor;
-            lampLight.intensity = baseLightIntensity;
-            lampLight.range = baseLightRange;
             lampLight.shadows = LightShadows.Soft;
-            Debug.Log($"[PlayerLamp] 시작 밝기 적용: 밝기 {lampLight.intensity:0.00}, 범위 {lampLight.range:0.00}");
         }
 
-        ApplyGlowEmission();
+        currentGlowEmission = baseGlowEmission;
+        ApplyVisualProgress01(0f, true);
     }
 
     private void Update()
@@ -76,6 +86,8 @@ public class PlayerLamp : MonoBehaviour
         }
 
         float previousIntensity = lampLight.intensity;
+        float previousRange = lampLight.range;
+        float previousGlowEmission = currentGlowEmission;
 
         lampLight.intensity = Mathf.MoveTowards(
             lampLight.intensity,
@@ -83,15 +95,11 @@ public class PlayerLamp : MonoBehaviour
             intensityChangeSpeed * Time.deltaTime
         );
 
-        float previousRange = lampLight.range;
-
         lampLight.range = Mathf.MoveTowards(
             lampLight.range,
             targetLightRange,
             rangeChangeSpeed * Time.deltaTime
         );
-
-        float previousGlowEmission = currentGlowEmission;
 
         currentGlowEmission = Mathf.MoveTowards(
             currentGlowEmission,
@@ -109,45 +117,102 @@ public class PlayerLamp : MonoBehaviour
              !Mathf.Approximately(previousGlowEmission, currentGlowEmission)) &&
             Time.time >= nextLightChangeLogTime)
         {
-            Debug.Log($"[PlayerLamp] 빛이 밝아지는 중: 밝기 {lampLight.intensity:0.00}/{targetLightIntensity:0.00}, 범위 {lampLight.range:0.00}/{targetLightRange:0.00}, 발광 {currentGlowEmission:0.00}/{targetGlowEmission:0.00}");
+            Debug.Log(
+                $"[PlayerLamp] 진행도 {visualProgress01:0.00} | 밝기 {lampLight.intensity:0.00}/{targetLightIntensity:0.00}, " +
+                $"범위 {lampLight.range:0.00}/{targetLightRange:0.00}, 발광 {currentGlowEmission:0.00}/{targetGlowEmission:0.00}"
+            );
+
             nextLightChangeLogTime = Time.time + lightChangeLogInterval;
         }
     }
 
+    public void SetVisualProgress01(float normalizedProgress)
+    {
+        ApplyVisualProgress01(normalizedProgress, false);
+    }
+
+    public void ResetVisuals()
+    {
+        ApplyVisualProgress01(0f, true);
+    }
+
     public void IncreaseLight(float amount)
     {
-        float previousTargetIntensity = targetLightIntensity;
-        float previousTargetRange = targetLightRange;
-        float previousTargetGlowEmission = targetGlowEmission;
+        // 예전 구조와 호환용: 물리 충돌/구형 트리거를 쓰는 경우에만 fallback으로 사용
+        if (fallbackAmountForFullCharge <= 0.0001f)
+        {
+            fallbackAmountForFullCharge = 12f;
+        }
 
-        targetLightIntensity = Mathf.Clamp(
-            targetLightIntensity + Mathf.Max(0f, amount),
-            baseLightIntensity,
-            maxLightIntensity
-        );
+        float deltaNormalized = Mathf.Max(0f, amount) / fallbackAmountForFullCharge;
+        ApplyVisualProgress01(visualProgress01 + deltaNormalized, false);
+    }
 
-        targetLightRange = Mathf.Clamp(
-            targetLightRange + Mathf.Max(0f, rangeIncreaseAmount),
-            baseLightRange,
-            maxLightRange
-        );
+    public void ForceLampOff()
+    {
+        if (lampLight != null)
+        {
+            lampLight.enabled = false;
+        }
 
-        targetGlowEmission = Mathf.Clamp(
-            targetGlowEmission + Mathf.Max(0f, glowIncreaseAmount),
-            baseGlowEmission,
-            maxGlowEmission
-        );
+        if (lampGlowRenderer != null)
+        {
+            Material glowMaterial = lampGlowRenderer.material;
+            glowMaterial.EnableKeyword("_EMISSION");
+            glowMaterial.SetColor("_EmissionColor", Color.black);
+        }
+    }
 
-        Debug.Log($"[PlayerLamp] 목표 빛 증가: 밝기 {previousTargetIntensity:0.00} -> {targetLightIntensity:0.00}, 범위 {previousTargetRange:0.00} -> {targetLightRange:0.00}, 발광 {previousTargetGlowEmission:0.00} -> {targetGlowEmission:0.00}");
+    public void ForceLampOn()
+    {
+        if (lampLight != null)
+        {
+            lampLight.enabled = true;
+        }
+
+        ApplyGlowEmission();
+    }
+
+    private void ApplyVisualProgress01(float normalizedProgress, bool applyImmediately)
+    {
+        visualProgress01 = Mathf.Clamp01(normalizedProgress);
+
+        float intensityT = Mathf.Clamp01(intensityByProgress.Evaluate(visualProgress01));
+        float rangeT = Mathf.Clamp01(rangeByProgress.Evaluate(visualProgress01));
+        float glowT = Mathf.Clamp01(glowByProgress.Evaluate(visualProgress01));
+
+        targetLightIntensity = Mathf.Lerp(baseLightIntensity, maxLightIntensity, intensityT);
+        targetLightRange = Mathf.Lerp(baseLightRange, maxLightRange, rangeT);
+        targetGlowEmission = Mathf.Lerp(baseGlowEmission, maxGlowEmission, glowT);
+
+        if (applyImmediately)
+        {
+            if (lampLight != null)
+            {
+                lampLight.intensity = targetLightIntensity;
+                lampLight.range = targetLightRange;
+                lampLight.enabled = true;
+
+                Debug.Log(
+                    $"[PlayerLamp] 시작 밝기 적용: 진행도 {visualProgress01:0.00}, " +
+                    $"밝기 {lampLight.intensity:0.00}, 범위 {lampLight.range:0.00}"
+                );
+            }
+
+            currentGlowEmission = targetGlowEmission;
+            ApplyGlowEmission();
+        }
     }
 
     private void OnTriggerEnter(Collider other)
     {
+        if (!allowPhysicalBoostFromTags) return;
         TryIncreaseLightFromObject(other.gameObject);
     }
 
     private void OnCollisionEnter(Collision collision)
     {
+        if (!allowPhysicalBoostFromTags) return;
         TryIncreaseLightFromObject(collision.gameObject);
     }
 
@@ -159,7 +224,7 @@ public class PlayerLamp : MonoBehaviour
         }
 
         Debug.Log($"[PlayerLamp] object 태그 물체에 닿음: {touchedObject.name}");
-        IncreaseLight(lightIncreaseAmount);
+        IncreaseLight(1f);
     }
 
     private void ApplyGlowEmission()

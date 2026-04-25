@@ -27,6 +27,10 @@ public class HotspotTarget : MonoBehaviour
     [SerializeField] private FlowStage requiredStage = FlowStage.Intro;
     [SerializeField] private float requiredHoldTime = 1.5f;
 
+    [Header("Focus / Interrupt")]
+    [SerializeField] private bool decayProgressWhenInterrupted = false;
+    [SerializeField] private float progressDecaySpeed = 0.8f;
+
     [Header("Lamp Reward")]
     [SerializeField] private float addLampPower = 0f;
 
@@ -48,6 +52,9 @@ public class HotspotTarget : MonoBehaviour
     public HotspotType TargetType => targetType;
     public bool Activated => activated;
     public bool Interactable => interactable;
+    public bool DecayProgressWhenInterrupted => decayProgressWhenInterrupted;
+    public float ProgressDecaySpeed => progressDecaySpeed;
+
     public float HoldProgressNormalized
     {
         get
@@ -95,8 +102,7 @@ public class HotspotTarget : MonoBehaviour
 
         if (requiresLamp && !isUsingLamp)
         {
-            ResetHold();
-            return 0f;
+            return HandleInterrupted(deltaTime);
         }
 
         if (requiredHoldTime <= 0f)
@@ -110,6 +116,26 @@ public class HotspotTarget : MonoBehaviour
         if (holdProgress >= requiredHoldTime)
         {
             Activate(flowManager);
+        }
+
+        return HoldProgressNormalized;
+    }
+
+    public float HandleInterrupted(float deltaTime)
+    {
+        if (requiredHoldTime <= 0f)
+        {
+            holdProgress = 0f;
+            return 0f;
+        }
+
+        if (decayProgressWhenInterrupted)
+        {
+            holdProgress = Mathf.Max(0f, holdProgress - progressDecaySpeed * deltaTime);
+        }
+        else
+        {
+            holdProgress = 0f;
         }
 
         return HoldProgressNormalized;

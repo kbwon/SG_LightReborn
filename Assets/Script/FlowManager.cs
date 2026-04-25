@@ -26,6 +26,7 @@ public class FlowManager : MonoBehaviour
     [Header("Restore Progress")]
     [SerializeField] private int restoredSmallAnimals = 0;
     [SerializeField] private int requiredSmallAnimalsToUnlockWolf = 2;
+    [SerializeField] private List<string> rescuedSmallAnimalIdsDebug = new List<string>();
 
     [Header("Flags")]
     [SerializeField] private bool lampTaken = false;
@@ -63,6 +64,7 @@ public class FlowManager : MonoBehaviour
     [SerializeField] private GameObject[] hideOnFinished;
 
     private readonly Dictionary<GameObject, bool> initialObjectStates = new Dictionary<GameObject, bool>();
+    private readonly HashSet<string> rescuedSmallAnimalIdSet = new HashSet<string>();
 
     [SerializeField] private PlayerLamp playerLampVisual;
 
@@ -87,17 +89,11 @@ public class FlowManager : MonoBehaviour
         CacheInitialStates(showOnTreeCleared, hideOnTreeCleared);
         CacheInitialStates(showOnFinished, hideOnFinished);
 
-        // 처음에는 해금 대상들을 잠가 둡니다.
         SetTargetsInteractable(unlockOnLampTaken, false);
         SetTargetsInteractable(unlockOnFreeRestore, false);
         SetTargetsInteractable(unlockOnWolfUnlocked, false);
         SetTargetsInteractable(unlockOnWolfCleared, false);
         SetTargetsInteractable(unlockOnTreeCleared, false);
-    }
-
-    private void Start()
-    {
-        
     }
 
     public void NotifyLampTaken()
@@ -136,7 +132,7 @@ public class FlowManager : MonoBehaviour
                 break;
 
             case HotspotType.SmallAnimal:
-                restoredSmallAnimals++;
+                RegisterRescuedSmallAnimal(target.TargetId);
                 Debug.Log($"[FlowManager] Small animal restored: {restoredSmallAnimals}");
 
                 if (!wolfUnlocked && restoredSmallAnimals >= requiredSmallAnimalsToUnlockWolf)
@@ -208,12 +204,31 @@ public class FlowManager : MonoBehaviour
         Debug.Log($"[FlowManager] LampPower set: {lampPower}");
     }
 
+    public bool HasRescuedSmallAnimal(string targetId)
+    {
+        if (string.IsNullOrEmpty(targetId)) return false;
+        return rescuedSmallAnimalIdSet.Contains(targetId);
+    }
+
+    private void RegisterRescuedSmallAnimal(string targetId)
+    {
+        if (string.IsNullOrEmpty(targetId)) return;
+
+        if (rescuedSmallAnimalIdSet.Add(targetId))
+        {
+            restoredSmallAnimals++;
+            rescuedSmallAnimalIdsDebug.Add(targetId);
+        }
+    }
+
     public void ResetAll()
     {
         currentStage = FlowStage.Intro;
 
         lampPower = 0f;
         restoredSmallAnimals = 0;
+        rescuedSmallAnimalIdSet.Clear();
+        rescuedSmallAnimalIdsDebug.Clear();
 
         lampTaken = false;
         deerActivated = false;
@@ -223,7 +238,6 @@ public class FlowManager : MonoBehaviour
         treeCleared = false;
         endingCompleted = false;
 
-        // 추적 중인 오브젝트를 처음 상태로 복구
         foreach (var pair in initialObjectStates)
         {
             if (pair.Key != null)
@@ -232,14 +246,12 @@ public class FlowManager : MonoBehaviour
             }
         }
 
-        // 핫스팟 자체도 초기 상태로 복구
         HotspotTarget[] allTargets = FindObjectsOfType<HotspotTarget>(true);
         foreach (HotspotTarget target in allTargets)
         {
             target.ResetTargetState();
         }
 
-        // 시작 시 잠가야 하는 것들 다시 잠금
         SetTargetsInteractable(unlockOnLampTaken, false);
         SetTargetsInteractable(unlockOnFreeRestore, false);
         SetTargetsInteractable(unlockOnWolfUnlocked, false);
@@ -257,6 +269,13 @@ public class FlowManager : MonoBehaviour
         {
             sequence.ResetSequence();
         }
+
+        TwoStageSmallAnimalController[] twoStageControllers = FindObjectsOfType<TwoStageSmallAnimalController>(true);
+        foreach (TwoStageSmallAnimalController controller in twoStageControllers)
+        {
+            controller.ResetController();
+        }
+
         SpriteCrossFadeGroup[] fadeGroups = FindObjectsOfType<SpriteCrossFadeGroup>(true);
         foreach (SpriteCrossFadeGroup group in fadeGroups)
         {
@@ -267,6 +286,12 @@ public class FlowManager : MonoBehaviour
         foreach (DeerEndController controller in deerEndControllers)
         {
             controller.ResetSequence();
+        }
+
+        EndingCompanionController[] endingCompanionControllers = FindObjectsOfType<EndingCompanionController>(true);
+        foreach (EndingCompanionController controller in endingCompanionControllers)
+        {
+            controller.HideAllImmediate();
         }
 
         Debug.Log("[FlowManager] ResetAll completed");
@@ -329,6 +354,4 @@ public class FlowManager : MonoBehaviour
 
         Debug.Log("[FlowManager] Ending completed -> Stage: Finished");
     }
-
-
 }

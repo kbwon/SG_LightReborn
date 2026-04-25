@@ -1,11 +1,13 @@
 using System.Collections;
 using UnityEngine;
+using TMPro;
 
 public class DeerEndController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private FlowManager flowManager;
     [SerializeField] private HotspotTarget hotspotTarget;
+    [SerializeField] private EndingCompanionController endingCompanionController;
 
     [Header("Deer Objects")]
     [SerializeField] private GameObject deerReturn;
@@ -18,15 +20,25 @@ public class DeerEndController : MonoBehaviour
     [SerializeField] private LampTransferFX lampTransferFX;
     [SerializeField] private GameObject lampObjectToTurnOff;
 
-    [Header("Timing")]
-    [SerializeField] private float returnDuration = 1.5f;
-    [SerializeField] private float transformTotalDuration = 1.8f;
-    [SerializeField] private float finalFadeDuration = 0.8f;
+    [Header("Hide On Return Start")]
+    [SerializeField] private GameObject[] objectsToHideOnReturnStart;
 
+    [Header("Ending Message")]
     [SerializeField] private GameObject endingMessageObject;
+    [SerializeField] private TMP_Text endingMessageText;
     [SerializeField] private float endingMessageDelay = 0.2f;
+    [SerializeField] private int fullRestoreRequiredCount = 4;
+    [SerializeField] private string fullRestoreMessage = "숲이 완전히 회복되었습니다";
+    [SerializeField] private string partialRestoreMessage = "숲은 회복되었지만 아직 모든 생명이 돌아오지는 않았습니다";
+
+    [Header("Hide At Ending End")]
     [SerializeField] private GameObject[] objectsToHideAtEndingEnd;
 
+    [Header("Timing")]
+    [SerializeField] private float returnDuration = 1.5f;
+    [SerializeField] private float companionFadeInDuration = 0.6f;
+    [SerializeField] private float transformTotalDuration = 1.8f;
+    [SerializeField] private float finalFadeDuration = 0.8f;
 
     private bool returnStarted = false;
     private bool finalSequenceStarted = false;
@@ -56,6 +68,8 @@ public class DeerEndController : MonoBehaviour
 
     private IEnumerator ReturnSequenceRoutine()
     {
+        HideObjects(objectsToHideOnReturnStart);
+
         SetObjectActive(deerReturn, true);
         SetObjectActive(deerShadowIdle, false);
         SetObjectActive(deerHintGlow, false);
@@ -70,6 +84,11 @@ public class DeerEndController : MonoBehaviour
 
         SetObjectActive(deerReturn, false);
         SetObjectActive(deerShadowIdle, true);
+
+        if (endingCompanionController != null)
+        {
+            endingCompanionController.ShowForEnding(companionFadeInDuration);
+        }
 
         if (hotspotTarget != null)
         {
@@ -89,7 +108,6 @@ public class DeerEndController : MonoBehaviour
         SetObjectActive(deerHintGlow, false);
         SetObjectActive(deerShadowIdle, false);
 
-        // 빛 전달 효과 + 사슴 변신/고개 들기 동시 시작
         if (lampTransferFX != null && deerTargetPoint != null)
         {
             lampTransferFX.PlayToTarget(deerTargetPoint);
@@ -102,6 +120,11 @@ public class DeerEndController : MonoBehaviour
         if (lampTransferFX != null)
         {
             lampTransferFX.StopNow();
+        }
+
+        if (endingCompanionController != null)
+        {
+            endingCompanionController.FadeOutVisibleCompanions(finalFadeDuration);
         }
 
         yield return StartCoroutine(FadeOutObjectRoutine(deerTransform, finalFadeDuration));
@@ -151,15 +174,15 @@ public class DeerEndController : MonoBehaviour
             yield return null;
         }
 
-        if (objectsToHideAtEndingEnd != null)
+        HideObjects(objectsToHideAtEndingEnd);
+
+        if (endingMessageText != null)
         {
-            foreach (GameObject obj in objectsToHideAtEndingEnd)
-            {
-                if (obj != null)
-                {
-                    obj.SetActive(false);
-                }
-            }
+            bool fullRestore =
+                flowManager != null &&
+                flowManager.RestoredSmallAnimals >= fullRestoreRequiredCount;
+
+            endingMessageText.text = fullRestore ? fullRestoreMessage : partialRestoreMessage;
         }
 
         if (endingMessageObject != null)
@@ -187,6 +210,16 @@ public class DeerEndController : MonoBehaviour
         {
             lampTransferFX.StopNow();
         }
+
+        if (endingCompanionController != null)
+        {
+            endingCompanionController.HideAllImmediate();
+        }
+
+        if (endingMessageObject != null)
+        {
+            endingMessageObject.SetActive(false);
+        }
     }
 
     private void SetInitialState()
@@ -199,6 +232,24 @@ public class DeerEndController : MonoBehaviour
         if (hotspotTarget != null)
         {
             hotspotTarget.SetInteractable(false);
+        }
+
+        if (endingMessageObject != null)
+        {
+            endingMessageObject.SetActive(false);
+        }
+    }
+
+    private void HideObjects(GameObject[] objects)
+    {
+        if (objects == null) return;
+
+        foreach (GameObject obj in objects)
+        {
+            if (obj != null)
+            {
+                obj.SetActive(false);
+            }
         }
     }
 

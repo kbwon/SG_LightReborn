@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class LookInteractor : MonoBehaviour
@@ -63,35 +65,9 @@ public class LookInteractor : MonoBehaviour
 
         Ray ray = new Ray(targetCamera.transform.position, targetCamera.transform.forward);
 
-        bool hitSomething;
-        RaycastHit hit;
-
-        if (useSphereCast && sphereCastRadius > 0f)
-        {
-            hitSomething = Physics.SphereCast(
-                ray,
-                sphereCastRadius,
-                out hit,
-                maxDistance,
-                hotspotMask
-            );
-        }
-        else
-        {
-            hitSomething = Physics.Raycast(
-                ray,
-                out hit,
-                maxDistance,
-                hotspotMask
-            );
-        }
-
-        HotspotTarget newTarget = null;
-
-        if (hitSomething)
-        {
-            newTarget = hit.collider.GetComponentInParent<HotspotTarget>();
-        }
+        bool hadAnyHit;
+        bool hadValidCandidate;
+        HotspotTarget newTarget = FindBestTarget(ray, out hadAnyHit, out hadValidCandidate);
 
         if (newTarget != currentTarget)
         {
@@ -110,28 +86,16 @@ public class LookInteractor : MonoBehaviour
 
             if (drawDebugRay)
             {
-                Debug.DrawRay(ray.origin, ray.direction * maxDistance, missColor);
+                Color debugColor = hadAnyHit ? invalidColor : missColor;
+                Debug.DrawRay(ray.origin, ray.direction * maxDistance, debugColor);
             }
 
             return;
         }
 
-        bool extraChecksPassed = PassesExtraChecks(currentTarget);
-
         if (drawDebugRay)
         {
-            Debug.DrawRay(
-                ray.origin,
-                ray.direction * maxDistance,
-                extraChecksPassed ? validColor : invalidColor
-            );
-        }
-
-        if (!extraChecksPassed)
-        {
-            currentTarget.ResetHold();
-            currentProgress = 0f;
-            return;
+            Debug.DrawRay(ray.origin, ray.direction * maxDistance, validColor);
         }
 
         bool usingLamp = false;
@@ -139,7 +103,7 @@ public class LookInteractor : MonoBehaviour
         if (autoInteractWhenClose)
         {
             bool hasLamp = (player == null) || !requireLampEquipped || player.HasLamp;
-            usingLamp = extraChecksPassed && hasLamp;
+            usingLamp = hasLamp;
         }
         else
         {
@@ -157,6 +121,75 @@ public class LookInteractor : MonoBehaviour
         {
             currentProgress = 0f;
         }
+    }
+
+    private HotspotTarget FindBestTarget(Ray ray, out bool hadAnyHit, out bool hadValidCandidate)
+    {
+        hadAnyHit = false;
+        hadValidCandidate = false;
+
+        RaycastHit[] hits = useSphereCast && sphereCastRadius > 0f
+            ? Physics.SphereCastAll(ray, sphereCastRadius, maxDistance, hotspotMask)
+            : Physics.RaycastAll(ray, maxDistance, hotspotMask);
+
+        if (hits == null || hits.Length == 0)
+        {
+            return null;
+        }
+
+        hadAnyHit = true;
+
+        Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+        HashSet<HotspotTarget> seenTargets = new HashSet<HotspotTarget>();
+
+        HotspotTarget bestInteractable = null;
+        float bestInteractableScore = float.NegativeInfinity;
+
+        HotspotTarget bestFallback = null;
+        float bestFallbackScore = float.NegativeInfinity;
+
+        foreach (RaycastHit hit in hits)
+        {
+            HotspotTarget target = hit.collider.GetComponentInParent<HotspotTarget>();
+            if (target == null) continue;
+            if (!seenTargets.Add(target)) continue;
+
+            if (!PassesExtraChecks(target))
+            {
+                continue;
+            }
+
+            hadValidCandidate = true;
+
+            bool canInteract = target.CanInteract(flowManager, player);
+
+            float score = -hit.distance;
+
+            if (target == currentTarget)
+            {
+                score += 0.2f;
+            }
+
+            if (canInteract)
+            {
+                if (score > bestInteractableScore)
+                {
+                    bestInteractableScore = score;
+                    bestInteractable = target;
+                }
+            }
+            else
+            {
+                if (score > bestFallbackScore)
+                {
+                    bestFallbackScore = score;
+                    bestFallback = target;
+                }
+            }
+        }
+
+        return bestInteractable != null ? bestInteractable : bestFallback;
     }
 
     private bool PassesExtraChecks(HotspotTarget target)

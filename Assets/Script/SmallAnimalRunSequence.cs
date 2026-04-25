@@ -29,6 +29,8 @@ public class SmallAnimalRunSequence : MonoBehaviour
     private SpriteRenderer[] activatedRenderers;
     private Color[] activatedInitialColors;
 
+    public float TotalDuration => startMoveDelay + runDuration;
+
     private void Awake()
     {
         if (activatedObject != null)
